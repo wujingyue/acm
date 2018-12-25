@@ -19,23 +19,25 @@ void AddEdge(int x, int y, int len, Graph* g) {
   g->at(x).push_back(e);
 }
 
-bool SPFA(const Graph& g, int start, vector<long long>* d) {
+// SPFA from nodes whose `d` is less than LLONG_MAX.
+bool SPFA(const Graph& g, vector<long long>* d) {
   int n = g.size();
   queue<int> q;
   vector<bool> in_queue(n);
   vector<int> num_dequeues(n);
-  d->resize(n);
-  fill(d->begin(), d->end(), LLONG_MAX);
 
-  q.push(start);
-  in_queue[start] = true;
-  d->at(start) = 0;
+  for (int x = 0; x < n; ++x) {
+    if (d->at(x) < LLONG_MAX) {
+      q.push(x);
+      in_queue[x] = true;
+    }
+  }
 
   while (!q.empty()) {
     int x = q.front();
     q.pop();
     in_queue[x] = false;
-    // Detect negative cycles that are reachable from `start`.
+    // Found a negative cycle if any node is dequeued for more than n times.
     num_dequeues[x]++;
     if (num_dequeues[x] > n) {
       return false;
@@ -78,16 +80,19 @@ int main() {
     AddEdge(y, x, -len, &g);
   }
 
-  vector<long long> d;
-  if (!SPFA(g, 0, &d)) {
+  vector<long long> d(n, LLONG_MAX);
+  d[0] = 0;
+  if (!SPFA(g, &d)) {
     printf("-1\n");
     return 0;
   }
 
   long long answer = d[n - 1];
-  // Because n-1 reaches all nodes, SPFA from n-1 detects any negative cycle in
-  // the whole graph. SPFA from 0 detects only negative cycles reachable from 0.
-  if (!SPFA(g, n - 1, &d)) {
+  // Set all d's to 0 and detect any negative cycle in the whole graph.  The
+  // previous call to SPFA starts from 0 so it detects only negative cycles
+  // reachable from 0.
+  fill(d.begin(), d.end(), 0);
+  if (!SPFA(g, &d)) {
     printf("-1\n");
     return 0;
   }
