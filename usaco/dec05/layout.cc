@@ -24,7 +24,8 @@ bool SPFA(const Graph& g, int start, vector<long long>* d) {
   queue<int> q;
   vector<bool> in_queue(n);
   vector<int> num_dequeues(n);
-  d->resize(n, LLONG_MAX);
+  d->resize(n);
+  fill(d->begin(), d->end(), LLONG_MAX);
 
   q.push(start);
   in_queue[start] = true;
@@ -82,9 +83,13 @@ int main() {
     printf("-1\n");
     return 0;
   }
-  if (d[n - 1] == LLONG_MAX) {
-    printf("-2\n");
+
+  long long answer = d[n - 1];
+  // Because n-1 reaches all nodes, SPFA from n-1 detects any negative cycle in
+  // the whole graph. SPFA from 0 detects only negative cycles reachable from 0.
+  if (!SPFA(g, n - 1, &d)) {
+    printf("-1\n");
     return 0;
   }
-  printf("%lld\n", d[n - 1]);
+  printf("%lld\n", answer == LLONG_MAX ? -2 : answer);
 }
