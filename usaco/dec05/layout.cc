@@ -19,11 +19,11 @@ void AddEdge(int x, int y, int len, Graph* g) {
   g->at(x).push_back(e);
 }
 
-bool BellmanFord(const Graph& g, int start, vector<long long>* d) {
+bool SPFA(const Graph& g, int start, vector<long long>* d) {
   int n = g.size();
   queue<int> q;
   vector<bool> in_queue(n);
-  vector<int> relaxes(n);
+  vector<int> num_dequeues(n);
   d->resize(n, LLONG_MAX);
 
   q.push(start);
@@ -34,6 +34,11 @@ bool BellmanFord(const Graph& g, int start, vector<long long>* d) {
     int x = q.front();
     q.pop();
     in_queue[x] = false;
+    // Detect negative cycles that are reachable from `start`.
+    num_dequeues[x]++;
+    if (num_dequeues[x] > n) {
+      return false;
+    }
     for (int i = 0; i < g[x].size(); ++i) {
       const Edge& e = g[x][i];
       int y = e.neighbor;
@@ -42,10 +47,6 @@ bool BellmanFord(const Graph& g, int start, vector<long long>* d) {
         if (!in_queue[y]) {
           q.push(y);
           in_queue[y] = true;
-          relaxes[y]++;
-          if (relaxes[y] > n) {
-            return false;
-          }
         }
       }
     }
@@ -77,13 +78,13 @@ int main() {
   }
 
   vector<long long> d;
-  if (BellmanFord(g, 0, &d)) {
-    if (d[n - 1] == LLONG_MAX) {
-      printf("-2\n");
-    } else {
-      printf("%lld\n", d[n - 1]);
-    }
-  } else {
+  if (!SPFA(g, 0, &d)) {
     printf("-1\n");
+    return 0;
   }
+  if (d[n - 1] == LLONG_MAX) {
+    printf("-2\n");
+    return 0;
+  }
+  printf("%lld\n", d[n - 1]);
 }
