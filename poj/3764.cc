@@ -8,12 +8,28 @@ struct Edge {
   Edge(int neighbor, int length) {
     this->neighbor = neighbor;
     this->length = length;
+    this->next = -1;
   }
   int neighbor;
   int length;
+  int next;
 };
 
-typedef vector<vector<Edge> > Graph;
+struct Graph {
+  Graph(int num_nodes, int expected_num_edges) : head(num_nodes, -1) {
+    edges.reserve(expected_num_edges);
+  }
+
+  void AddEdge(int x, int y, int len) {
+    Edge e(y, len);
+    e.next = head[x];
+    head[x] = edges.size();
+    edges.push_back(e);
+  }
+
+  vector<Edge> edges;
+  vector<int> head;
+};
 
 struct TrieNode {
   TrieNode() {
@@ -66,14 +82,16 @@ void DFS(const Graph &g, vector<int> *stack, vector<int> *parent,
   while (!stack->empty()) {
     int x = stack->back();
     stack->pop_back();
-    for (int i = 0; i < g[x].size(); ++i) {
-      const Edge& e = g[x][i];
+    int i = g.head[x];
+    while (i != -1) {
+      const Edge& e = g.edges[i];
       int y = e.neighbor;
       if ((*parent)[y] == -1) {
         stack->push_back(y);
         (*parent)[y] = x;
         (*prefix_xor)[y] = (*prefix_xor)[x] ^ e.length;
       }
+      i = e.next;
     }
   }
 }
@@ -90,12 +108,12 @@ int BitWidth(int number) {
 int main() {
   int n;
   while (scanf("%d", &n) != EOF) {
-    Graph g(n);
+    Graph g(n, n * 2);
     for (int i = 0; i < n - 1; ++i) {
       int x, y, len;
       scanf("%d %d %d", &x, &y, &len);
-      g[x].push_back(Edge(y, len));
-      g[y].push_back(Edge(x, len));
+      g.AddEdge(x, y, len);
+      g.AddEdge(y, x, len);
     }
 
     vector<int> stack;
