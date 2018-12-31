@@ -25,37 +25,27 @@ struct TrieNode {
 };
 
 struct Trie {
-  Trie(int bw): root(new TrieNode()), bit_width(bw) {}
-
-  ~Trie() {
-    Erase(root);
-  }
-
-  void Erase(TrieNode* p) {
-    if (p == NULL) {
-      return;
-    }
-    for (int i = 0; i < 2; ++i) {
-      Erase(p->children[i]);
-    }
-    delete p;
+  Trie(int expected_num_nodes, int bw) : bit_width(bw) {
+    nodes.reserve(expected_num_nodes);
+    nodes.resize(1);
   }
 
   void Insert(int number) {
-    TrieNode* p = root;
+    TrieNode* p = &nodes[0];
     for (int i = bit_width - 1; i >= 0; --i) {
       int bit = (number >> i) & 1;
-      if (p->children[bit] == NULL) {
-        TrieNode* q = new TrieNode();
-        p->children[bit] = q;
+      TrieNode *&child = p->children[bit];
+      if (child == NULL) {
+        nodes.resize(nodes.size() + 1);
+        child = &nodes.back();
       }
-      p = p->children[bit];
+      p = child;
     }
   }
 
   int FindClosest(int number) {
     int closest = 0;
-    TrieNode* p = root;
+    TrieNode* p = &nodes[0];
     for (int i = bit_width - 1; i >= 0; --i) {
       int bit = (number >> i) & 1;
       if (p->children[bit] == NULL) {
@@ -67,7 +57,7 @@ struct Trie {
     return closest;
   }
 
-  TrieNode* root;
+  vector<TrieNode> nodes;
   int bit_width;
 };
 
@@ -121,7 +111,7 @@ int main() {
     // largest possible xor value.
     int bit_width =
         BitWidth(*max_element(prefix_xor.begin(), prefix_xor.end()));
-    Trie trie(bit_width);
+    Trie trie(n * bit_width, bit_width);
     trie.Insert(prefix_xor[0]);
 
     int max_xor = 0;
