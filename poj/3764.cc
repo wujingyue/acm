@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdio>
 #include <vector>
 
@@ -24,9 +25,7 @@ struct TrieNode {
 };
 
 struct Trie {
-  Trie() {
-    root = new TrieNode();
-  }
+  Trie(int bw): root(new TrieNode()), bit_width(bw) {}
 
   ~Trie() {
     Erase(root);
@@ -44,7 +43,7 @@ struct Trie {
 
   void Insert(int number) {
     TrieNode* p = root;
-    for (int i = 31; i >= 0; --i) {
+    for (int i = bit_width - 1; i >= 0; --i) {
       int bit = (number >> i) & 1;
       if (p->children[bit] == NULL) {
         TrieNode* q = new TrieNode();
@@ -57,7 +56,7 @@ struct Trie {
   int FindClosest(int number) {
     int closest = 0;
     TrieNode* p = root;
-    for (int i = 31; i >= 0; --i) {
+    for (int i = bit_width - 1; i >= 0; --i) {
       int bit = (number >> i) & 1;
       if (p->children[bit] == NULL) {
         bit = 1 - bit;
@@ -69,6 +68,7 @@ struct Trie {
   }
 
   TrieNode* root;
+  int bit_width;
 };
 
 void DFS(const Graph &g, vector<int> *stack, vector<int> *parent,
@@ -86,6 +86,15 @@ void DFS(const Graph &g, vector<int> *stack, vector<int> *parent,
       }
     }
   }
+}
+
+int BitWidth(int number) {
+  int bit_width = 0;
+  while (number > 0) {
+    number /= 2;
+    bit_width++;
+  }
+  return bit_width;
 }
 
 int main() {
@@ -108,7 +117,11 @@ int main() {
     prefix_xor[0] = 0;
     DFS(g, &stack, &parent, &prefix_xor);
 
-    Trie trie;
+    // The height of the trie doesn't need to exceed the bit width of the
+    // largest possible xor value.
+    int bit_width =
+        BitWidth(*max_element(prefix_xor.begin(), prefix_xor.end()));
+    Trie trie(bit_width);
     trie.Insert(prefix_xor[0]);
 
     int max_xor = 0;
