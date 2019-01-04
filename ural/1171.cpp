@@ -1,20 +1,20 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
-#include <cstdio>
-#include <cstring>
-#include <vector>
-#include <set>
-#include <map>
-#include <cmath>
-#include <complex>
-#include <cstdlib>
-#include <string>
 #include <algorithm>
 #include <cassert>
-#include <queue>
 #include <cctype>
+#include <cmath>
+#include <complex>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <queue>
+#include <set>
+#include <sstream>
+#include <string>
+#include <vector>
 using namespace std;
 
 typedef long double Real;
@@ -48,34 +48,29 @@ void input() {
   scanf("%d", &m);
   for (int i = m - 1; i >= 0; --i) {
     for (int x = 0; x < n; ++x) {
-      for (int y = 0; y < n; ++y)
-        scanf("%d", &a[i][x * n + y]);
+      for (int y = 0; y < n; ++y) scanf("%d", &a[i][x * n + y]);
     }
     for (int x = 0; x < n; ++x) {
-      for (int y = 0; y < n; ++y)
-        scanf("%d", &down[i][x * n + y]);
+      for (int y = 0; y < n; ++y) scanf("%d", &down[i][x * n + y]);
     }
   }
   int ux, uy;
-  scanf("%d %d", &ux, &uy); --ux; --uy;
+  scanf("%d %d", &ux, &uy);
+  --ux;
+  --uy;
   u = ux * n + uy;
 }
 
-inline bool outside(int x, int y) {
-  return x < 0 || x >= n || y < 0 || y >= n;
-}
+inline bool outside(int x, int y) { return x < 0 || x >= n || y < 0 || y >= n; }
 
 int dfs(int x, int y) {
-  if (visited[x][y])
-    return 0;
-  if (b[x][y] == 0)
-    return 0;
+  if (visited[x][y]) return 0;
+  if (b[x][y] == 0) return 0;
   visited[x][y] = true;
   int res = 1;
   for (int dir = 0; dir < 4; ++dir) {
     int x1 = x + dx[dir], y1 = y + dy[dir];
-    if (!outside(x1, y1))
-      res += dfs(x1, y1);
+    if (!outside(x1, y1)) res += dfs(x1, y1);
   }
   return res;
 }
@@ -89,12 +84,12 @@ bool is_a_cc(int s) {
       s /= 2;
       if (b[x][y] == 1) {
         n_filled++;
-        ux = x; uy = y;
+        ux = x;
+        uy = y;
       }
     }
   }
-  if (n_filled == 0)
-    return true;
+  if (n_filled == 0) return true;
   memset(visited, 0, sizeof visited);
   return dfs(ux, uy) == n_filled;
 }
@@ -110,8 +105,7 @@ void compute_ccs() {
     }
     sz[s] = 0;
     for (int z = 0; z < n * n; ++z) {
-      if (s & (1 << z))
-        sz[s]++;
+      if (s & (1 << z)) sz[s]++;
     }
   }
 #if 0
@@ -135,8 +129,7 @@ void dp() {
     for (int s = 0; s < max_s; ++s) {
       sum[s] = 0;
       for (int z = 0; z < n * n; ++z) {
-        if (s & (1 << z))
-          sum[s] += a[i][z];
+        if (s & (1 << z)) sum[s] += a[i][z];
       }
     }
     // intra-level: c => d
@@ -150,21 +143,17 @@ void dp() {
         } else {
           for (int icc = 0; icc < n_ccs; ++icc) {
             int s = ccs[icc];
-            if (!(s & (1 << z)))
-              continue;
+            if (!(s & (1 << z))) continue;
             int s1 = (s & (~(1 << z)));
             if (valid[s1][z][z1]) {
-              if (update(opt[sz[s] - 1], sum[s1]))
-                opt_s[sz[s] - 1] = s1;
+              if (update(opt[sz[s] - 1], sum[s1])) opt_s[sz[s] - 1] = s1;
             }
           }
         }
         for (int l = 0; l < max_l; ++l) {
-          if (c[i][z][l] < 0)
-            continue;
+          if (c[i][z][l] < 0) continue;
           for (int delta = 0; delta < n * n; ++delta) {
-            if (opt[delta] < 0)
-              continue;
+            if (opt[delta] < 0) continue;
             if (update(d[i][z1][l + delta], c[i][z][l] + opt[delta])) {
               f[i][z1][l + delta] = z;
               f_s[i][z1][l + delta] = opt_s[delta];
@@ -187,27 +176,22 @@ void dp() {
   }
 }
 
-void solve() {
-  dp();
-}
+void solve() { dp(); }
 
 void print_d(int, int, int);
 
 void print_c(int i, int z, int l) {
   // fprintf(stderr, "print_c(%d, %d, %d)\n", i, z, l);
-  if (i == m - 1)
-    return;
+  if (i == m - 1) return;
   print_d(i + 1, z, l - 1);
   printf("D");
 }
 
 bool search(int z, int v, int s, vector<int> &path) {
   assert((s & (1 << z)) == 0);
-  if (mark[z][s])
-    return false;
+  if (mark[z][s]) return false;
   mark[z][s] = true;
-  if (!is_cc[s])
-    return false;
+  if (!is_cc[s]) return false;
   if (z == v) {
     if (s == 0)
       return true;
@@ -251,8 +235,7 @@ void print_d(int i, int z, int l) {
   print_c(i, z1, l - sz[s]);
   vector<int> path;
   find_path(z1, z, s, path);
-  for (size_t k = 0; k < path.size(); ++k)
-    printf("%c", dir_to_char[path[k]]);
+  for (size_t k = 0; k < path.size(); ++k) printf("%c", dir_to_char[path[k]]);
 }
 
 void output() {
@@ -273,7 +256,8 @@ void output() {
       Real cur = (Real)d[0][z][l] / l;
       if (cur > ans) {
         ans = cur;
-        ans_z = z; ans_l = l;
+        ans_z = z;
+        ans_l = l;
       }
     }
   }
@@ -290,8 +274,8 @@ void init() {
     for (int z1 = 0; z1 < n * n; ++z1) {
       for (int z2 = z1 + 1; z2 < n * n; ++z2) {
         int s1 = (s & (~(1 << z1)) & (~(1 << z2)));
-        int s2 = (s & (~(1 << z1))); // no start
-        int s3 = (s & (~(1 << z2))); // no end
+        int s2 = (s & (~(1 << z1)));  // no start
+        int s3 = (s & (~(1 << z2)));  // no end
         if (!is_cc[s] || !is_cc[s1] || !is_cc[s2] || !is_cc[s3]) {
           valid[s2][z1][z2] = false;
           valid[s2][z2][z1] = false;
@@ -316,6 +300,5 @@ int main() {
   input();
   solve();
   output();
-	return 0;
+  return 0;
 }
-

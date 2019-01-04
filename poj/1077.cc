@@ -16,13 +16,7 @@ int FindZero(int b) {
   }
 }
 
-int DigitAtIndex(int number, int i) {
-  return number / power_of_tens[i] % 10;
-}
-
-int Swap(int b, int zero_pos, int neighbor_pos) {
-  return b + DigitAtIndex(b, neighbor_pos) * (power_of_tens[zero_pos] - power_of_tens[neighbor_pos]);
-}
+int DigitAtIndex(int number, int i) { return number / power_of_tens[i] % 10; }
 
 int Compress(int b) {
   int compressed = 0;
@@ -62,16 +56,20 @@ bool BFS(int start, int end, vector<pair<int, char> >* pre) {
 
     int num_neighbors = 0;
     if (x > 0) {
-      neighbors[num_neighbors++] = make_pair(Swap(b, zero_pos, zero_pos - n), 'u');
+      neighbors[num_neighbors++] =
+          make_pair(Swap(b, zero_pos, zero_pos - n), 'u');
     }
     if (x + 1 < n) {
-      neighbors[num_neighbors++] = make_pair(Swap(b, zero_pos, zero_pos + n), 'd');
+      neighbors[num_neighbors++] =
+          make_pair(Swap(b, zero_pos, zero_pos + n), 'd');
     }
     if (y > 0) {
-      neighbors[num_neighbors++] = make_pair(Swap(b, zero_pos, zero_pos - 1), 'l');
+      neighbors[num_neighbors++] =
+          make_pair(Swap(b, zero_pos, zero_pos - 1), 'l');
     }
     if (y + 1 < n) {
-      neighbors[num_neighbors++] = make_pair(Swap(b, zero_pos, zero_pos + 1), 'r');
+      neighbors[num_neighbors++] =
+          make_pair(Swap(b, zero_pos, zero_pos + 1), 'r');
     }
     for (int i = 0; i < num_neighbors; ++i) {
       int neighbor = neighbors[i].first;
@@ -97,7 +95,7 @@ int main() {
   }
 
   int start = 0;
-  for (int i = 0; i < n * n; ++i){
+  for (int i = 0; i < n * n; ++i) {
     char ch;
     cin >> ch;
     if (ch == 'x') {

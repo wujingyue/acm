@@ -1,18 +1,18 @@
-#include <iostream>
-#include <iomanip>
-#include <cstdio>
-#include <cstring>
-#include <vector>
-#include <set>
-#include <map>
-#include <cmath>
-#include <complex>
-#include <cstdlib>
-#include <string>
 #include <algorithm>
 #include <cassert>
-#include <queue>
 #include <cctype>
+#include <cmath>
+#include <complex>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <queue>
+#include <set>
+#include <string>
+#include <vector>
 using namespace std;
 
 const int max_n = 32768;
@@ -25,69 +25,61 @@ int n, m, h, idx;
 
 /* i = m, j = h, k = n */
 long long work(int i, int j, int k) {
-	if (i <= 0)
-		return 0;
-	if (i > k)
-		return 0;
-	if (c[i][j][k] >= 0)
-		return c[i][j][k];
-	if (j == 1) {
-		c[i][j][k] = 1;
-	} else {
-		assert(oo - work(i - 1, j - 1, k - i) >= work(i + 1, j - 1, k - i));
-		c[i][j][k] = work(i - 1, j - 1, k - i) + work(i + 1, j - 1, k - i);
-	}
-	return c[i][j][k];
+  if (i <= 0) return 0;
+  if (i > k) return 0;
+  if (c[i][j][k] >= 0) return c[i][j][k];
+  if (j == 1) {
+    c[i][j][k] = 1;
+  } else {
+    assert(oo - work(i - 1, j - 1, k - i) >= work(i + 1, j - 1, k - i));
+    c[i][j][k] = work(i - 1, j - 1, k - i) + work(i + 1, j - 1, k - i);
+  }
+  return c[i][j][k];
 }
 
 void init() {
-	scanf("%d %d %d", &n, &h, &m);
-	memset(c, -1, sizeof c);
-	printf("%lld\n", work(m, h, n));
-	int filled = 0;
-	for (int i = 0; i < max_m; ++i) {
-		for (int j = 0; j < max_h; ++j) {
-			for (int k = 0; k < max_n; ++k) {
-				if (c[i][j][k] >= 0)
-					filled++;
-			}
-		}
-	}
-	cerr << "filled = " << filled << endl;
+  scanf("%d %d %d", &n, &h, &m);
+  memset(c, -1, sizeof c);
+  printf("%lld\n", work(m, h, n));
+  int filled = 0;
+  for (int i = 0; i < max_m; ++i) {
+    for (int j = 0; j < max_h; ++j) {
+      for (int k = 0; k < max_n; ++k) {
+        if (c[i][j][k] >= 0) filled++;
+      }
+    }
+  }
+  cerr << "filled = " << filled << endl;
 }
 
 bool input() {
-	scanf("%d", &idx);
-	return idx != -1;
+  scanf("%d", &idx);
+  return idx != -1;
 }
 
 void print(int i, int j, int k, long long idx) {
-	assert(idx >= 1 && idx <= work(i, j, k));
-	if (j == 1) {
-		printf("%d\n", i);
-		return;
-	}
-	printf("%d ", i);
-	long long left = work(i - 1, j - 1, k - i);
-	if (idx <= left)
-		print(i - 1, j - 1, k - i, idx);
-	else
-		print(i + 1, j - 1, k - i, idx - left);
+  assert(idx >= 1 && idx <= work(i, j, k));
+  if (j == 1) {
+    printf("%d\n", i);
+    return;
+  }
+  printf("%d ", i);
+  long long left = work(i - 1, j - 1, k - i);
+  if (idx <= left)
+    print(i - 1, j - 1, k - i, idx);
+  else
+    print(i + 1, j - 1, k - i, idx - left);
 }
 
-void solve() {
-	print(m, h, n, idx);
-}
+void solve() { print(m, h, n, idx); }
 
-void output() {
-}
+void output() {}
 
 int main() {
-	init();
-	while (input()) {
-		solve();
-		output();
-	}
-	return 0;
+  init();
+  while (input()) {
+    solve();
+    output();
+  }
+  return 0;
 }
-
