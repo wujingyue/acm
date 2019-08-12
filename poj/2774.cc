@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -14,6 +15,35 @@ struct Suffix {
     return (first != other.first ? first < other.first : second < other.second);
   }
 };
+
+void BucketSort(vector<Suffix>& suffixes) {
+  int n = suffixes.size();
+  vector<Suffix> temp(n);
+  vector<int> count(n + 1);
+  for (int i = 0; i < n; i++) {
+    // The second rank can be -1.
+    count[suffixes[i].second + 1]++;
+  }
+  for (int j = 1; j <= n; j++) {
+    count[j] += count[j - 1];
+  }
+  for (int i = n - 1; i >= 0; i--) {
+    int radix = suffixes[i].second + 1;
+    temp[--count[radix]] = suffixes[i];
+  }
+
+  fill(count.begin(), count.end(), 0);
+  for (int i = 0; i < n; i++) {
+    count[temp[i].first]++;
+  }
+  for (int j = 1; j < n; j++) {
+    count[j] += count[j - 1];
+  }
+  for (int i = n - 1; i >= 0; i--) {
+    int radix = temp[i].first;
+    suffixes[--count[radix]] = temp[i];
+  }
+}
 
 int LongestCommonPrefix(const string& a, const string& b) {
   if (a.empty() || b.empty()) {
@@ -56,7 +86,7 @@ int LongestCommonPrefix(const string& a, const string& b) {
       int j = suffixes[i].index + step;
       suffixes[i].second = (j >= n ? -1 : rank[j]);
     }
-    sort(suffixes.begin(), suffixes.end());
+    BucketSort(suffixes);
   }
 
   vector<int> h(n, 0);
