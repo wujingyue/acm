@@ -81,7 +81,6 @@ int LongestCommonPrefix(const string& a, const string& b) {
       // Break the loop if all ranks are distinct.
       break;
     }
-    // TODO(jingyue): break the loop if max rank == n - 1.
     for (int i = 0; i < n; i++) {
       int j = suffixes[i].index + step;
       suffixes[i].second = (j >= n ? -1 : rank[j]);
