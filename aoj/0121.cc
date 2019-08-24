@@ -5,9 +5,9 @@
 
 using namespace std;
 
-static const int r = 2;
-static const int c = 4;
-static const int n = r * c;
+constexpr int r = 2;
+constexpr int c = 4;
+constexpr int n = r * c;
 
 int power_of_tens[n];
 
