@@ -23,16 +23,16 @@ bool ReadBoard(int* b) {
   return true;
 }
 
+int DigitAtIndex(int number, int i) { return number / power_of_tens[i] % 10; }
+
 int FindZero(int b) {
   for (int i = 0; i < n; ++i) {
-    if (b / power_of_tens[i] % 10 == 0) {
+    if (DigitAtIndex(b, i) == 0) {
       return i;
     }
   }
   return -1;
 }
-
-int DigitAtIndex(int number, int i) { return number / power_of_tens[i] % 10; }
 
 int Swap(int b, int zero_pos, int neighbor_pos) {
   return b + DigitAtIndex(b, neighbor_pos) *
