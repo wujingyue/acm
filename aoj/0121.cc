@@ -1,3 +1,5 @@
+#include <getopt.h>
+#include <algorithm>
 #include <cassert>
 #include <cstdio>
 #include <map>
@@ -80,7 +82,20 @@ map<int, int> BFS(int start) {
   return step;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+  bool gen_tests = false;
+  int opt;
+  while ((opt = getopt(argc, argv, "g")) != -1) {
+    switch (opt) {
+      case 'g':
+        gen_tests = true;
+        break;
+      default:
+        fprintf(stderr, "Usage: %s [-g]\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+  }
+
   power_of_tens[0] = 1;
   for (int i = 1; i < n; ++i) {
     power_of_tens[i] = power_of_tens[i - 1] * 10;
@@ -88,9 +103,22 @@ int main() {
 
   map<int, int> step = BFS(76543210);
 
-  int b;
-  while (ReadBoard(&b)) {
-    assert(step.count(b));
-    printf("%d\n", step.at(b));
+  if (gen_tests) {
+    for (const auto& entry : step) {
+      int b = entry.first;
+      for (int i = 0; i < n; i++) {
+        if (i > 0) {
+          printf(" ");
+        }
+        printf("%d", DigitAtIndex(b, i));
+      }
+      printf("\n");
+    }
+  } else {
+    int b;
+    while (ReadBoard(&b)) {
+      assert(step.count(b));
+      printf("%d\n", step.at(b));
+    }
   }
 }
