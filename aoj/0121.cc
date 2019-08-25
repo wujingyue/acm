@@ -1,5 +1,4 @@
 #include <getopt.h>
-#include <algorithm>
 #include <cassert>
 #include <cstdio>
 #include <map>
@@ -47,6 +46,8 @@ map<int, int> BFS(int start) {
 
   q.push(start);
   step[start] = 0;
+  vector<int> neighbors;
+  neighbors.reserve(4);
   while (!q.empty()) {
     int b = q.front();
     q.pop();
@@ -56,22 +57,20 @@ map<int, int> BFS(int start) {
     int x = zero_pos / c;
     int y = zero_pos % c;
 
-    int neighbors[4];
-    int num_neighbors = 0;
+    neighbors.clear();
     if (x > 0) {
-      neighbors[num_neighbors++] = Swap(b, zero_pos, zero_pos - c);
+      neighbors.push_back(Swap(b, zero_pos, zero_pos - c));
     }
     if (x + 1 < r) {
-      neighbors[num_neighbors++] = Swap(b, zero_pos, zero_pos + c);
+      neighbors.push_back(Swap(b, zero_pos, zero_pos + c));
     }
     if (y > 0) {
-      neighbors[num_neighbors++] = Swap(b, zero_pos, zero_pos - 1);
+      neighbors.push_back(Swap(b, zero_pos, zero_pos - 1));
     }
     if (y + 1 < c) {
-      neighbors[num_neighbors++] = Swap(b, zero_pos, zero_pos + 1);
+      neighbors.push_back(Swap(b, zero_pos, zero_pos + 1));
     }
-    for (int i = 0; i < num_neighbors; ++i) {
-      int neighbor = neighbors[i];
+    for (int neighbor : neighbors) {
       if (!step.count(neighbor)) {
         q.push(neighbor);
         step[neighbor] = step.at(b) + 1;
