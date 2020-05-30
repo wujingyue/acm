@@ -37,21 +37,28 @@ class Solution {
 
     for (int i = 1; i < n; i++) {
       int num_empties = count(a[i].begin(), a[i].end(), '.');
+      int prefix_sum = 0;
+      for (int j = 0; j < n; j++) {
+        if (a[i - 1][j] == '.') {
+          prefix_sum = (prefix_sum + m[j]) % kModulo;
+        }
+      }
       for (int j = n; j >= 0; j--) {
+        // prefix_sum = Sum_{j2 = 0..j-1}(m[i-1][j2] if a[i-1][j2] is '.')
         m[j] = LeftShift(m[j], num_empties);
-        if (j == 0 || a[i][j - 1] == 'W') {
+        if (j == 0) {
           continue;
         }
-        if (num_empties < 2) {
-          assert(num_empties == 1);
-        }
-        for (int j2 = 0; j2 < j; j2++) {
-          if (a[i - 1][j2] == '.') {
-            m[j] = (m[j] + (num_empties == 1
-                                ? DivideByTwo(m[j2])
-                                : LeftShift(m[j2], num_empties - 2))) %
-                   kModulo;
+        if (a[i][j - 1] == '.') {
+          if (num_empties < 2) {
+            assert(num_empties == 1);
+            m[j] = (m[j] + DivideByTwo(prefix_sum)) % kModulo;
+          } else {
+            m[j] = (m[j] + LeftShift(prefix_sum, num_empties - 2)) % kModulo;
           }
+        }
+        if (a[i - 1][j - 1] == '.') {
+          prefix_sum = (prefix_sum - m[j - 1] + kModulo) % kModulo;
         }
       }
     }
