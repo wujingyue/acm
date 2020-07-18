@@ -100,12 +100,11 @@ class DPSolution {
 };
 
 struct Set {
-  explicit Set(const int c) : size(1), sum(c), cost(c), valid(true) {}
+  explicit Set(const int c) : size(1), sum(c), cost(c) {}
 
   int size;
   int sum;
   int cost;
-  bool valid;
 };
 
 // A summary of Set used in the priority queue.
@@ -130,6 +129,10 @@ class UnionFind {
     for (int x = 0; x < n; x++) {
       parent_[x] = x;
     }
+  }
+
+  bool IsRoot(const int x) const {
+    return parent_[x] == x;
   }
 
   int GetRoot(const int x) {
@@ -174,7 +177,7 @@ class UnionFindSolution {
       const SetInfo top = pq.top();
       pq.pop();
       int ry = top.root;
-      if (!sets[ry].valid || parent[ry] == ry) {
+      if (!union_find.IsRoot(ry) || parent[ry] == ry) {
         continue;
       }
 
@@ -187,7 +190,6 @@ class UnionFindSolution {
       sx->cost += sy->cost + sx->size * sy->sum;
       sx->size += sy->size;
       sx->sum += sy->sum;
-      sy->valid = false;
 
       pq.push(SetInfo(rx, sets[rx]));
     }
