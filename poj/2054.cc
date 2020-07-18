@@ -1,14 +1,15 @@
 #include <algorithm>
 #include <climits>
 #include <iostream>
+#include <queue>
 #include <vector>
 
 using namespace std;
 
-class Solution {
+class DPSolution {
  public:
   int Solve(const vector<int>& cost_factor, const vector<vector<int> >& g,
-            const int root) {
+            const vector<int>& parent, const int root) {
     vector<int> order;
     ComputeBestOrder(cost_factor, g, root, &order);
 
@@ -98,6 +99,103 @@ class Solution {
   }
 };
 
+struct Set {
+  Set(const int r, const int c)
+      : size(1), sum(c), cost(c), parent(r) {}
+
+  int size;
+  int sum;
+  int cost;
+  int parent;
+};
+
+// A summary of Set used in the priority queue.
+struct SetInfo {
+  SetInfo(const int r, const Set& s) : root(r), size(s.size), sum(s.sum) {}
+
+  bool operator<(const SetInfo& other) const {
+    // priority_queue puts the largest element on top.
+    // Set B should be merged before Set A iff B.sum / B.size > A.sum / A.size,
+    // i.e., B.sum * A.size > A.sum * B.size.
+    return other.sum * size > sum * other.size;
+  }
+
+  int root;
+  int size;
+  int sum;
+};
+
+class UnionFind {
+ public:
+  UnionFind(const vector<int>& cost_factor) {
+    const int n = cost_factor.size();
+    sets_.reserve(n);
+    for (int x = 0; x < n; x++) {
+      sets_.push_back(Set(x, cost_factor[x]));
+    }
+  }
+
+  int GetRoot(const int x) {
+    const int parent = sets_[x].parent;
+    if (parent == x) {
+      return x;
+    }
+    return sets_[x].parent = GetRoot(parent);
+  }
+
+  Set* GetSet(const int x) { return &sets_[x]; }
+
+  int Union(const int x, const int y) {
+    // cost0 = c0 + 2*c1 + 3*c2, sum0 = c0 + c1 + c2, n0 = 3
+    // cost1 = c3 + 2*c4 + 3*c5, sum1 = c3 + c4 + c5, n1 = 3
+    // merged cost = cost0 + cost1 + n0 * sum1
+    int rx = GetRoot(x);
+    int ry = GetRoot(y);
+    Set* sx = &sets_[rx];
+    Set* sy = &sets_[ry];
+
+    sy->parent = rx;
+    sx->cost += sy->cost + sx->size * sy->sum;
+    sx->size += sy->size;
+    sx->sum += sy->sum;
+    return rx;
+  }
+
+ private:
+  vector<Set> sets_;
+};
+
+class UnionFindSolution {
+ public:
+  int Solve(const vector<int>& cost_factor, const vector<vector<int> >& g,
+            const vector<int>& parent, const int root) {
+    const int n = cost_factor.size();
+
+    UnionFind union_find(cost_factor);
+    priority_queue<SetInfo> pq;
+
+    // Pick the largest.
+    // Merge with the set that contains its parent.
+    for (int x = 0; x < n; x++) {
+      pq.push(SetInfo(x, *union_find.GetSet(x)));
+    }
+    while (!pq.empty()) {
+      const SetInfo top = pq.top();
+      pq.pop();
+      int ry = top.root;
+      if (union_find.GetRoot(ry) != ry ||
+          union_find.GetSet(ry)->size != top.size || parent[ry] == ry) {
+        continue;
+      }
+
+      const int rx = union_find.Union(parent[ry], ry);
+      pq.push(SetInfo(rx, *union_find.GetSet(rx)));
+    }
+
+    return union_find.GetSet(root)->cost;
+  }
+};
+
 void ComputeParent(const vector<vector<int> >& g, const int x,
                    vector<int>& parent) {
   for (int j = 0, e = g[x].size(); j < e; j++) {
@@ -138,8 +236,8 @@ int main() {
       g[x].erase(remove(g[x].begin(), g[x].end(), parent[x]), g[x].end());
     }
 
-    Solution s;
-    cout << s.Solve(cost_factor, g, root) << endl;
+    UnionFindSolution s;
+    cout << s.Solve(cost_factor, g, parent, root) << endl;
 
     cin >> n >> root;
   }
