@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <climits>
 #include <iostream>
 #include <queue>
@@ -100,27 +101,110 @@ class DPSolution {
 };
 
 struct Set {
-  explicit Set(const int c) : size(1), sum(c), cost(c) {}
+  explicit Set(const int c) : size(1), sum(c), cost(c), pos_in_pq(-1) {}
+
+  bool operator<(const Set& other) const {
+    // Set A should be merged before Set B iff A.sum / A.size > B.sum / B.size,
+    // i.e., A.sum * B.size > B.sum * A.size.
+    return sum * other.size > other.sum * size;
+  }
+
+  bool operator<=(const Set& other) const { return !(other < *this); }
 
   int size;
   int sum;
   int cost;
+  int pos_in_pq;
 };
 
-// A summary of Set used in the priority queue.
-struct SetInfo {
-  SetInfo(const int r, const Set& s) : root(r), size(s.size), sum(s.sum) {}
+ostream& operator<<(ostream& os, const Set& s) {
+  os << "[size = " << s.size << ", sum = " << s.sum << ", cost = " << s.cost << "]";
+  return os;
+}
 
-  bool operator<(const SetInfo& other) const {
-    // priority_queue puts the largest element on top.
-    // Set B should be merged before Set A iff B.sum / B.size > A.sum / A.size,
-    // i.e., B.sum * A.size > A.sum * B.size.
-    return other.sum * size > sum * other.size;
+class PriorityQueue {
+ public:
+  PriorityQueue(vector<Set>& sets) : sets_(sets) {}
+
+  void Insert(const int x) {
+    const int i = order_.size();
+    order_.push_back(x);
+    sets_[x].pos_in_pq = i;
+    PercolateUp(i);
   }
 
-  int root;
-  int size;
-  int sum;
+  int Pop() {
+    return Delete(0);
+  }
+
+  void Adjust(const int i) {
+    PercolateUp(i);
+    PercolateDown(i);
+  }
+
+  bool Empty() const {
+    return order_.empty();
+  }
+
+ private:
+  int Delete(const int i) {
+    assert(i >= 0 && i < (int)order_.size());
+    const int x = order_[i];
+    sets_[x].pos_in_pq = -1;
+
+    const int y = order_.back();
+    order_.pop_back();
+    
+    if (i < (int)order_.size()) {
+      order_[i] = y;
+      sets_[y].pos_in_pq = i;
+
+      PercolateUp(i);
+      PercolateDown(i);
+    }
+    return x;
+  }
+
+  void PercolateUp(int j) {
+    int y = order_[j];
+    while (j > 0) {
+      int i = (j - 1) / 2;
+      int x = order_[i];
+      if (sets_[x] <= sets_[y]) {
+        break;
+      }
+      order_[j] = x;
+      sets_[x].pos_in_pq = j;
+
+      j = i;
+    }
+    order_[j] = y;
+    sets_[y].pos_in_pq = j;
+  }
+
+  void PercolateDown(int i) {
+    const int n = order_.size();
+    int x = order_[i];
+    while (i * 2 + 1 < n) {
+      int j = i * 2 + 1;
+      if (j + 1 < n && sets_[order_[j + 1]] < sets_[order_[j]]) {
+        j++;
+      }
+      int y = order_[j];
+      if (sets_[x] <= sets_[y]) {
+        break;
+      }
+      order_[i] = y;
+      sets_[y].pos_in_pq = i;
+
+      i = j;
+    }
+    order_[i] = x;
+    sets_[x].pos_in_pq = i;
+  }
+
+  vector<int> order_;
+  vector<Set>& sets_;
 };
 
 class UnionFind {
@@ -131,9 +215,7 @@ class UnionFind {
     }
   }
 
-  bool IsRoot(const int x) const {
-    return parent_[x] == x;
-  }
+  bool IsRoot(const int x) const { return parent_[x] == x; }
 
   int GetRoot(const int x) {
     const int parent = parent_[x];
@@ -168,22 +250,19 @@ class UnionFindSolution {
       sets.push_back(Set(cost_factor[x]));
     }
 
-    priority_queue<SetInfo> pq;
+    // Stores the roots of all unmerged sets except the tree root.
+    PriorityQueue pq(sets);
+    // TODO(jingyue): heapify in O(n) time.
     for (int x = 0; x < n; x++) {
       if (x != root) {
-        pq.push(SetInfo(x, sets[x]));
+        pq.Insert(x);
       }
     }
 
-    while (!pq.empty()) {
-      const SetInfo top = pq.top();
-      pq.pop();
-      int ry = top.root;
-      if (!union_find.IsRoot(ry)) {
-        continue;
-      }
-
+    while (!pq.Empty()) {
+      int ry = pq.Pop();
       const int rx = union_find.Union(parent[ry], ry);
+
       // cost0 = c0 + 2*c1 + 3*c2, sum0 = c0 + c1 + c2, n0 = 3
       // cost1 = c3 + 2*c4 + 3*c5, sum1 = c3 + c4 + c5, n1 = 3
       // merged cost = cost0 + cost1 + n0 * sum1
@@ -193,8 +272,9 @@ class UnionFindSolution {
       sx->size += sy->size;
       sx->sum += sy->sum;
 
-      if (rx != root) {
-        pq.push(SetInfo(rx, sets[rx]));
+      // The tree root is not in pq.
+      if (sx->pos_in_pq >= 0) {
+        pq.Adjust(sx->pos_in_pq);
       }
     }
 
