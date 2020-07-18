@@ -170,14 +170,16 @@ class UnionFindSolution {
 
     priority_queue<SetInfo> pq;
     for (int x = 0; x < n; x++) {
-      pq.push(SetInfo(x, sets[x]));
+      if (x != root) {
+        pq.push(SetInfo(x, sets[x]));
+      }
     }
 
     while (!pq.empty()) {
       const SetInfo top = pq.top();
       pq.pop();
       int ry = top.root;
-      if (!union_find.IsRoot(ry) || parent[ry] == ry) {
+      if (!union_find.IsRoot(ry)) {
         continue;
       }
 
@@ -191,7 +193,9 @@ class UnionFindSolution {
       sx->size += sy->size;
       sx->sum += sy->sum;
 
-      pq.push(SetInfo(rx, sets[rx]));
+      if (rx != root) {
+        pq.push(SetInfo(rx, sets[rx]));
+      }
     }
 
     return sets[root].cost;
