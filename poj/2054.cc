@@ -100,13 +100,12 @@ class DPSolution {
 };
 
 struct Set {
-  Set(const int r, const int c)
-      : size(1), sum(c), cost(c), parent(r) {}
+  explicit Set(const int c) : size(1), sum(c), cost(c), valid(true) {}
 
   int size;
   int sum;
   int cost;
-  int parent;
+  bool valid;
 };
 
 // A summary of Set used in the priority queue.
@@ -127,42 +126,29 @@ struct SetInfo {
 
 class UnionFind {
  public:
-  UnionFind(const vector<int>& cost_factor) {
-    const int n = cost_factor.size();
-    sets_.reserve(n);
+  UnionFind(const int n) : parent_(n) {
     for (int x = 0; x < n; x++) {
-      sets_.push_back(Set(x, cost_factor[x]));
+      parent_[x] = x;
     }
   }
 
   int GetRoot(const int x) {
-    const int parent = sets_[x].parent;
+    const int parent = parent_[x];
     if (parent == x) {
       return x;
     }
-    return sets_[x].parent = GetRoot(parent);
+    return parent_[x] = GetRoot(parent);
   }
 
-  Set* GetSet(const int x) { return &sets_[x]; }
-
   int Union(const int x, const int y) {
-    // cost0 = c0 + 2*c1 + 3*c2, sum0 = c0 + c1 + c2, n0 = 3
-    // cost1 = c3 + 2*c4 + 3*c5, sum1 = c3 + c4 + c5, n1 = 3
-    // merged cost = cost0 + cost1 + n0 * sum1
-    int rx = GetRoot(x);
-    int ry = GetRoot(y);
-    Set* sx = &sets_[rx];
-    Set* sy = &sets_[ry];
-
-    sy->parent = rx;
-    sx->cost += sy->cost + sx->size * sy->sum;
-    sx->size += sy->size;
-    sx->sum += sy->sum;
+    const int rx = GetRoot(x);
+    const int ry = GetRoot(y);
+    parent_[ry] = rx;
     return rx;
   }
 
  private:
-  vector<Set> sets_;
+  vector<int> parent_;
 };
 
 class UnionFindSolution {
@@ -171,28 +157,42 @@ class UnionFindSolution {
             const vector<int>& parent, const int root) {
     const int n = cost_factor.size();
 
-    UnionFind union_find(cost_factor);
-    priority_queue<SetInfo> pq;
+    UnionFind union_find(n);
 
-    // Pick the largest.
-    // Merge with the set that contains its parent.
+    vector<Set> sets;
+    sets.reserve(n);
     for (int x = 0; x < n; x++) {
-      pq.push(SetInfo(x, *union_find.GetSet(x)));
+      sets.push_back(Set(cost_factor[x]));
     }
+
+    priority_queue<SetInfo> pq;
+    for (int x = 0; x < n; x++) {
+      pq.push(SetInfo(x, sets[x]));
+    }
+
     while (!pq.empty()) {
       const SetInfo top = pq.top();
       pq.pop();
       int ry = top.root;
-      if (union_find.GetRoot(ry) != ry ||
-          union_find.GetSet(ry)->size != top.size || parent[ry] == ry) {
+      if (!sets[ry].valid || parent[ry] == ry) {
         continue;
       }
 
       const int rx = union_find.Union(parent[ry], ry);
-      pq.push(SetInfo(rx, *union_find.GetSet(rx)));
+      // cost0 = c0 + 2*c1 + 3*c2, sum0 = c0 + c1 + c2, n0 = 3
+      // cost1 = c3 + 2*c4 + 3*c5, sum1 = c3 + c4 + c5, n1 = 3
+      // merged cost = cost0 + cost1 + n0 * sum1
+      Set* sx = &sets[rx];
+      Set* sy = &sets[ry];
+      sx->cost += sy->cost + sx->size * sy->sum;
+      sx->size += sy->size;
+      sx->sum += sy->sum;
+      sy->valid = false;
+
+      pq.push(SetInfo(rx, sets[rx]));
     }
 
-    return union_find.GetSet(root)->cost;
+    return sets[root].cost;
   }
 };
 
