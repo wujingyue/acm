@@ -118,7 +118,8 @@ struct Set {
 };
 
 ostream& operator<<(ostream& os, const Set& s) {
-  os << "[size = " << s.size << ", sum = " << s.sum << ", cost = " << s.cost << "]";
+  os << "[size = " << s.size << ", sum = " << s.sum << ", cost = " << s.cost
+     << "]";
   return os;
 }
 
@@ -133,18 +134,14 @@ class PriorityQueue {
     PercolateUp(i);
   }
 
-  int Pop() {
-    return Delete(0);
-  }
+  int Pop() { return Delete(0); }
 
   void Adjust(const int i) {
     PercolateUp(i);
     PercolateDown(i);
   }
 
-  bool Empty() const {
-    return order_.empty();
-  }
+  bool Empty() const { return order_.empty(); }
 
  private:
   int Delete(const int i) {
@@ -154,7 +151,7 @@ class PriorityQueue {
 
     const int y = order_.back();
     order_.pop_back();
-    
+
     if (i < (int)order_.size()) {
       order_[i] = y;
       sets_[y].pos_in_pq = i;
