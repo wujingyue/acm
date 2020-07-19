@@ -143,6 +143,8 @@ class PriorityQueue {
 
   bool Empty() const { return order_.empty(); }
 
+  Set* GetSet(const int x) { return &sets_[x]; }
+
  private:
   int Delete(const int i) {
     assert(i >= 0 && i < (int)order_.size());
@@ -263,8 +265,8 @@ class UnionFindSolution {
       // cost0 = c0 + 2*c1 + 3*c2, sum0 = c0 + c1 + c2, n0 = 3
       // cost1 = c3 + 2*c4 + 3*c5, sum1 = c3 + c4 + c5, n1 = 3
       // merged cost = cost0 + cost1 + n0 * sum1
-      Set* sx = &sets[rx];
-      Set* sy = &sets[ry];
+      Set* sx = pq.GetSet(rx);
+      Set* sy = pq.GetSet(ry);
       sx->cost += sy->cost + sx->size * sy->sum;
       sx->size += sy->size;
       sx->sum += sy->sum;
@@ -275,7 +277,7 @@ class UnionFindSolution {
       }
     }
 
-    return sets[root].cost;
+    return pq.GetSet(root)->cost;
   }
 };
 
