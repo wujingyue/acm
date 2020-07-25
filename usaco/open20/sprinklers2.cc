@@ -97,7 +97,7 @@ int main() {
   vector<string> a(n);
   for (int i = 0; i < n; i++) {
     fin >> a[i];
-    assert(a[i].length() == n);
+    assert((int)a[i].length() == n);
   }
 
   ofstream fout("sprinklers2.out");
