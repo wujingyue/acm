@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -52,12 +53,26 @@ class Solution {
     for (auto i = preorder_.rbegin(), e = preorder_.rend(); i != e; i++) {
       const int x = *i;
       paths.clear();
+      if (x == root) {
+        // The goal is to pair all child paths so require an even number of
+        // child paths.
+        if (g_[x].size() % 2 != 0) {
+          paths.push_back(0);
+        }
+      } else {
+        // The goal is to find the longest child path such that the rest can be
+        // compared. So we require an odd number of child paths.
+        if (g_[x].size() % 2 == 0) {
+          paths.push_back(0);
+        }
+      }
       for (const int y : g_[x]) {
         paths.push_back(m[y] + 1);
       }
-      // TODO(jingyue): can be optimized using radix sort.
+
       sort(paths.begin(), paths.end());
-      m[x] = FindMaxSoRestCanBePaired(paths, k, x == root);
+
+      m[x] = Pair(paths, k, x != root);
       if (m[x] < 0) {
         return false;
       }
@@ -68,61 +83,48 @@ class Solution {
 
  private:
   // a must be sorted.
-  int FindMaxSoRestCanBePaired(const vector<int>& a, const int k,
-                               const bool target_zero) const {
+  static int Pair(const vector<int>& a, const int k, const bool find_longest) {
     const int n = a.size();
 
-    if (n % 2 == 1) {
-      return FindMaxSoRestCanBePairedOdd(a, 0, n - 1, k);
-    }
-
-    // n is even.
-    if (!target_zero && n > 0 && a[n - 1] >= k) {
-      int m = FindMaxSoRestCanBePairedOdd(a, 0, n - 2, k);
-      if (m >= 0) {
-        return m;
+    if (find_longest) {
+      assert(n % 2 == 1);
+      vector<int> match(n);
+      match[0] = -1;
+      {
+        int i = 1;
+        int j = n - 1;
+        while (i < j) {
+          if (a[i] + a[j] < k) {
+            return -1;
+          }
+          match[i] = j;
+          match[j] = i;
+          i++;
+          j--;
+        }
       }
-    }
 
-    int i = 0;
-    int j = n - 1;
-    while (i < j && a[i] + a[j] >= k) {
-      i++;
-      j--;
-    }
-    return (i > j ? 0 : -1);
-  }
-
-  int FindMaxSoRestCanBePairedOdd(const vector<int>& a, const int left,
-                                  const int right, const int k) const {
-    vector<int> match(a.size());
-    match[left] = -1;
-    {
-      int i = left + 1;
-      int j = right;
-      while (i < j) {
+      for (int i = 0; i + 1 < n; i++) {
+        // i is not paired and i+1 is.
+        // Can we pair i instead of i+1 with match[i+1]?
+        int j = match[i + 1];
         if (a[i] + a[j] < k) {
-          return -1;
+          return a[i];
         }
         match[i] = j;
         match[j] = i;
+        match[i + 1] = -1;
+      }
+      return a[n - 1];
+    } else {
+      int i = 0;
+      int j = n - 1;
+      while (i < j && a[i] + a[j] >= k) {
         i++;
         j--;
       }
+      return (i > j ? 0 : -1);
     }
-
-    for (int i = left; i + 1 <= right; i++) {
-      // i is not paired and i+1 is.
-      // Can we pair i instead of i+1 with match[i+1]?
-      int j = match[i + 1];
-      if (a[i] + a[j] < k) {
-        return a[i];
-      }
-      match[i] = j;
-      match[j] = i;
-      match[i + 1] = -1;
-    }
-    return a[right];
   }
 
   const Graph& g_;
