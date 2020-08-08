@@ -1,4 +1,4 @@
-CXXFLAGS = -std=gnu++11 -g -Wall -Werror
+CXXFLAGS = -std=gnu++11 -g -O2 -Wall -Werror
 
 %.exe: %.cc
 	$(CXX) $(CXXFLAGS) $< -o $@
