@@ -8,9 +8,13 @@
 using namespace std;
 
 constexpr int kModulo = 1000000007;
-constexpr int kMaxN = 20;
+constexpr int kHalf = (kModulo + 1) / 2;
+constexpr int kMinusHalf = kModulo - kHalf;
 
 class Matrix {
+ private:
+  static constexpr int kMaxN = 20;
+
  public:
   explicit Matrix(int n) : n_(n) {
     for (array<int, kMaxN>& row : m_) {
@@ -72,89 +76,14 @@ class Matrix {
     m_.swap(temp.m_);
   }
 
-  Matrix Inverse() const {
-    Matrix left = *this;
-    Matrix right = Matrix::One(n_);
-    for (int x = 0; x < n_; x++) {
-      int x2 = x;
-      while (x2 < n_ && left[x2][x] == 0) {
-        x2++;
-      }
-      if (x != x2) {
-        left[x].swap(left[x2]);
-        right[x].swap(right[x2]);
-      }
-
-      int inverse;
-      int ignore;
-      GCD(left[x][x], kModulo, &inverse, &ignore);
-      inverse = (inverse + kModulo) % kModulo;
-      for (int y = x; y < n_; y++) {
-        left[x][y] = (long long)left[x][y] * inverse % kModulo;
-      }
-      for (int y = 0; y < n_; y++) {
-        right[x][y] = (long long)right[x][y] * inverse % kModulo;
-      }
-      for (x2 = x + 1; x2 < n_; x2++) {
-        int multiplier = left[x2][x];
-        if (multiplier == 0) {
-          continue;
-        }
-        for (int y = x; y < n_; y++) {
-          left[x2][y] =
-              (left[x2][y] - (long long)left[x][y] * multiplier % kModulo +
-               kModulo) %
-              kModulo;
-        }
-        for (int y = 0; y < n_; y++) {
-          right[x2][y] =
-              (right[x2][y] - (long long)right[x][y] * multiplier % kModulo +
-               kModulo) %
-              kModulo;
-        }
-      }
-    }
-
-    for (int y = n_ - 1; y >= 0; y--) {
-      for (int x = 0; x < y; x++) {
-        int multiplier = left[x][y];
-        if (multiplier == 0) {
-          continue;
-        }
-        left[x][y] = 0;
-        for (int y2 = 0; y2 < n_; y2++) {
-          right[x][y2] =
-              (right[x][y2] - (long long)right[y][y2] * multiplier % kModulo +
-               kModulo) %
-              kModulo;
-        }
-      }
-    }
-
-    return right;
-  }
-
  private:
-  static int GCD(int a, int b, int* x, int* y) {
-    if (b == 0) {
-      *x = 1;
-      *y = 0;
-      return a;
-    }
-
-    int x2;
-    int y2;
-    int g = GCD(b, a % b, &x2, &y2);
-    *x = y2;
-    *y = x2 - a / b * y2;
-    return g;
-  }
-
   friend ostream& operator<<(ostream& os, const Matrix&);
 
   array<array<int, kMaxN>, kMaxN> m_;
   int n_;
 };
+
+constexpr int Matrix::kMaxN;
 
 ostream& operator<<(ostream& os, const Matrix& m) {
   const int n = m.Size();
@@ -185,11 +114,16 @@ class Solution {
 
     for (int i = 1; i <= n; i++) {
       Matrix transfer = Matrix::One(k);
-      for (int y = a[i - 1]; y < k; y++) {
-        transfer[a[i - 1]][y]++;
+      Matrix inverse_transfer = Matrix::One(k);
+      const int x = a[i - 1];
+      transfer[x][x] = 2;
+      inverse_transfer[x][x] = kHalf;
+      for (int y = x + 1; y < k; y++) {
+        transfer[x][y] = 1;
+        inverse_transfer[x][y] = kMinusHalf;
       }
       prefix_product.MultiplyRightSparse(transfer);
-      inverse_prefix_product.MultiplyLeftSparse(transfer.Inverse());
+      inverse_prefix_product.MultiplyLeftSparse(inverse_transfer);
       prefix_product_rightmost_column_[i] = RightmostColumn(prefix_product);
       flattened_inverse_prefix_product_[i] = Flatten(inverse_prefix_product);
     }
