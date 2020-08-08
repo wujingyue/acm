@@ -22,9 +22,12 @@ class Matrix : public vector<vector<int> > {
   Matrix operator*(const Matrix& other) const {
     const int n = size();
     Matrix m(n);
-    for (int x = 0; x < n; x++) {
+    for (int z = 0; z < n; z++) {
       for (int y = 0; y < n; y++) {
-        for (int z = 0; z < n; z++) {
+        if (other[z][y] == 0) {
+          continue;
+        }
+        for (int x = 0; x < n; x++) {
           m[x][y] =
               (m[x][y] + (long long)(*this)[x][z] * other[z][y] % kModulo) %
               kModulo;
