@@ -19,18 +19,36 @@ class Matrix : public vector<vector<int> > {
     return one;
   }
 
-  Matrix operator*(const Matrix& other) const {
+  Matrix MultiplyLeftSparse(const Matrix& other) const {
     const int n = size();
+
+    Matrix m(n);
+    for (int z = 0; z < n; z++) {
+      for (int x = 0; x < n; x++) {
+        const long long e = (*this)[x][z];
+        if (e == 0) {
+          continue;
+        }
+        for (int y = 0; y < n; y++) {
+          m[x][y] = (m[x][y] + e * other[z][y] % kModulo) % kModulo;
+        }
+      }
+    }
+    return m;
+  }
+
+  Matrix MultiplyRightSparse(const Matrix& other) const {
+    const int n = size();
+
     Matrix m(n);
     for (int z = 0; z < n; z++) {
       for (int y = 0; y < n; y++) {
-        if (other[z][y] == 0) {
+        const long long e = other[z][y];
+        if (e == 0) {
           continue;
         }
         for (int x = 0; x < n; x++) {
-          m[x][y] =
-              (m[x][y] + (long long)(*this)[x][z] * other[z][y] % kModulo) %
-              kModulo;
+          m[x][y] = (m[x][y] + e * (*this)[x][z] % kModulo) % kModulo;
         }
       }
     }
@@ -142,17 +160,19 @@ class Solution {
     flattened_inverse_prefix_product_.resize(n + 1);
 
     Matrix prefix_product = Matrix::One(k);
+    Matrix inverse_prefix_product = Matrix::One(k);
     prefix_product_rightmost_column_[0] = RightmostColumn(prefix_product);
-    flattened_inverse_prefix_product_[0] = Flatten(prefix_product);
+    flattened_inverse_prefix_product_[0] = Flatten(inverse_prefix_product);
 
     for (int i = 1; i <= n; i++) {
       Matrix transfer = Matrix::One(k);
       for (int y = a[i - 1]; y < k; y++) {
         transfer[a[i - 1]][y]++;
       }
-      prefix_product = prefix_product * transfer;
+      prefix_product = prefix_product.MultiplyRightSparse(transfer);
+      inverse_prefix_product = transfer.Inverse().MultiplyLeftSparse(inverse_prefix_product);
       prefix_product_rightmost_column_[i] = RightmostColumn(prefix_product);
-      flattened_inverse_prefix_product_[i] = Flatten(prefix_product.Inverse());
+      flattened_inverse_prefix_product_[i] = Flatten(inverse_prefix_product);
     }
   }
 
