@@ -7,12 +7,7 @@ end = int(sys.argv[3])
 
 out_filename = '{}.out'.format(prob)
 for i in range(start, end + 1):
-  print 'Running test case {}...'.format(i)
-  in_filename = '{}{}.in'.format(prob, i)
-  ans_filename = '{}{}.out'.format(prob, i)
-  with open(in_filename, 'r') as in_file:
-    with open(out_filename, 'w') as out_file:
-      subprocess.check_call(
-          './{}'.format(prob), shell=True, stdin=in_file, stdout=out_file)
-  subprocess.check_call(
-      'diff -ruN {} {}'.format(out_filename, ans_filename), shell=True)
+  print(f'Running test case {i}...')
+  subprocess.check_call(f'cp {i}.in {prob}.in', shell=True)
+  subprocess.check_call(f'./{prob}.exe', shell=True)
+  subprocess.check_call(f'diff -qruN {prob}.out {i}.out', shell=True)
