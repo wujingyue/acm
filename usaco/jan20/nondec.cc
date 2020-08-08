@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -7,62 +8,76 @@
 using namespace std;
 
 constexpr int kModulo = 1000000007;
+constexpr int kMaxN = 20;
 
-class Matrix : public vector<vector<int> > {
+class Matrix {
  public:
-  explicit Matrix(int n) : vector<vector<int> >(n, vector<int>(n)) {}
+  explicit Matrix(int n) : n_(n) {
+    for (array<int, kMaxN>& row : m_) {
+      fill(row.begin(), row.end(), 0);
+    }
+  }
+
   static Matrix One(int n) {
     Matrix one(n);
     for (int x = 0; x < n; x++) {
-      one[x][x] = 1;
+      one.m_[x][x] = 1;
     }
     return one;
   }
 
-  Matrix MultiplyLeftSparse(const Matrix& other) const {
-    const int n = size();
+  Matrix(const Matrix& other) = default;
+  Matrix(Matrix&& other) = default;
+  Matrix& operator=(Matrix&& other) = default;
 
-    Matrix m(n);
-    for (int z = 0; z < n; z++) {
-      for (int x = 0; x < n; x++) {
-        const long long e = (*this)[x][z];
-        if (e == 0) {
-          continue;
-        }
-        for (int y = 0; y < n; y++) {
-          m[x][y] = (m[x][y] + e * other[z][y] % kModulo) % kModulo;
-        }
-      }
-    }
-    return m;
+  const array<int, kMaxN>& operator[](size_t i) const {
+    return m_[i];
   }
 
-  Matrix MultiplyRightSparse(const Matrix& other) const {
-    const int n = size();
+  array<int, kMaxN>& operator[](size_t i) {
+    return m_[i];
+  }
 
-    Matrix m(n);
-    for (int z = 0; z < n; z++) {
-      for (int y = 0; y < n; y++) {
-        const long long e = other[z][y];
+  int Size() const { return n_; }
+
+  void MultiplyLeftSparse(const Matrix& left) {
+    Matrix temp(n_);
+    for (int z = 0; z < n_; z++) {
+      for (int x = 0; x < n_; x++) {
+        const long long e = left[x][z];
         if (e == 0) {
           continue;
         }
-        for (int x = 0; x < n; x++) {
-          m[x][y] = (m[x][y] + e * (*this)[x][z] % kModulo) % kModulo;
+        for (int y = 0; y < n_; y++) {
+          temp[x][y] = (temp[x][y] + e * (*this)[z][y] % kModulo) % kModulo;
         }
       }
     }
-    return m;
+    m_.swap(temp.m_);
+  }
+
+  void MultiplyRightSparse(const Matrix& right) {
+    Matrix temp(n_);
+    for (int z = 0; z < n_; z++) {
+      for (int y = 0; y < n_; y++) {
+        const long long e = right[z][y];
+        if (e == 0) {
+          continue;
+        }
+        for (int x = 0; x < n_; x++) {
+          temp[x][y] = (temp[x][y] + e * (*this)[x][z] % kModulo) % kModulo;
+        }
+      }
+    }
+    m_.swap(temp.m_);
   }
 
   Matrix Inverse() const {
-    const int n = size();
-
     Matrix left = *this;
-    Matrix right = Matrix::One(n);
-    for (int x = 0; x < n; x++) {
+    Matrix right = Matrix::One(n_);
+    for (int x = 0; x < n_; x++) {
       int x2 = x;
-      while (x2 < n && left[x2][x] == 0) {
+      while (x2 < n_ && left[x2][x] == 0) {
         x2++;
       }
       if (x != x2) {
@@ -74,24 +89,24 @@ class Matrix : public vector<vector<int> > {
       int ignore;
       GCD(left[x][x], kModulo, &inverse, &ignore);
       inverse = (inverse + kModulo) % kModulo;
-      for (int y = x; y < n; y++) {
+      for (int y = x; y < n_; y++) {
         left[x][y] = (long long)left[x][y] * inverse % kModulo;
       }
-      for (int y = 0; y < n; y++) {
+      for (int y = 0; y < n_; y++) {
         right[x][y] = (long long)right[x][y] * inverse % kModulo;
       }
-      for (x2 = x + 1; x2 < n; x2++) {
+      for (x2 = x + 1; x2 < n_; x2++) {
         int multiplier = left[x2][x];
         if (multiplier == 0) {
           continue;
         }
-        for (int y = x; y < n; y++) {
+        for (int y = x; y < n_; y++) {
           left[x2][y] =
               (left[x2][y] - (long long)left[x][y] * multiplier % kModulo +
                kModulo) %
               kModulo;
         }
-        for (int y = 0; y < n; y++) {
+        for (int y = 0; y < n_; y++) {
           right[x2][y] =
               (right[x2][y] - (long long)right[x][y] * multiplier % kModulo +
                kModulo) %
@@ -100,14 +115,14 @@ class Matrix : public vector<vector<int> > {
       }
     }
 
-    for (int y = n - 1; y >= 0; y--) {
+    for (int y = n_ - 1; y >= 0; y--) {
       for (int x = 0; x < y; x++) {
         int multiplier = left[x][y];
         if (multiplier == 0) {
           continue;
         }
         left[x][y] = 0;
-        for (int y2 = 0; y2 < n; y2++) {
+        for (int y2 = 0; y2 < n_; y2++) {
           right[x][y2] =
               (right[x][y2] - (long long)right[y][y2] * multiplier % kModulo +
                kModulo) %
@@ -136,10 +151,14 @@ class Matrix : public vector<vector<int> > {
   }
 
   friend ostream& operator<<(ostream& os, const Matrix&);
+
+  array<array<int, kMaxN>, kMaxN> m_;
+  int n_;
 };
 
 ostream& operator<<(ostream& os, const Matrix& m) {
-  const int n = m.size();
+  const int n = m.Size();
+
   for (int x = 0; x < n; x++) {
     for (int y = 0; y < n; y++) {
       os << m[x][y] << ' ';
@@ -169,8 +188,8 @@ class Solution {
       for (int y = a[i - 1]; y < k; y++) {
         transfer[a[i - 1]][y]++;
       }
-      prefix_product = prefix_product.MultiplyRightSparse(transfer);
-      inverse_prefix_product = transfer.Inverse().MultiplyLeftSparse(inverse_prefix_product);
+      prefix_product.MultiplyRightSparse(transfer);
+      inverse_prefix_product.MultiplyLeftSparse(transfer.Inverse());
       prefix_product_rightmost_column_[i] = RightmostColumn(prefix_product);
       flattened_inverse_prefix_product_[i] = Flatten(inverse_prefix_product);
     }
@@ -191,7 +210,7 @@ class Solution {
 
  private:
   static vector<int> Flatten(const Matrix& m) {
-    const int n = m.size();
+    const int n = m.Size();
     vector<int> flattened(n);
     for (int y = 0; y < n; y++) {
       int sum = 0;
@@ -204,7 +223,7 @@ class Solution {
   }
 
   static vector<int> RightmostColumn(const Matrix& m) {
-    const int n = m.size();
+    const int n = m.Size();
     vector<int> rightmost_column(n);
     for (int x = 0; x < n; x++) {
       rightmost_column[x] = m[x][n - 1];
