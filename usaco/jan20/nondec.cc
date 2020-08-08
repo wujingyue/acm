@@ -44,8 +44,6 @@ class Matrix : public vector<vector<int> > {
       while (x2 < n && left[x2][x] == 0) {
         x2++;
       }
-      assert(x2 < n);
-      assert(left[x2][x] > 0);
       if (x != x2) {
         left[x].swap(left[x2]);
         right[x].swap(right[x2]);
@@ -53,13 +51,11 @@ class Matrix : public vector<vector<int> > {
 
       int inverse;
       int ignore;
-      int g = GCD(left[x][x], kModulo, &inverse, &ignore);
-      assert(g == 1);
+      GCD(left[x][x], kModulo, &inverse, &ignore);
       inverse = (inverse + kModulo) % kModulo;
       for (int y = x; y < n; y++) {
         left[x][y] = (long long)left[x][y] * inverse % kModulo;
       }
-      assert(left[x][x] == 1);
       for (int y = 0; y < n; y++) {
         right[x][y] = (long long)right[x][y] * inverse % kModulo;
       }
@@ -74,7 +70,6 @@ class Matrix : public vector<vector<int> > {
                kModulo) %
               kModulo;
         }
-        assert(left[x2][x] == 0);
         for (int y = 0; y < n; y++) {
           right[x2][y] =
               (right[x2][y] - (long long)right[x][y] * multiplier % kModulo +
@@ -100,8 +95,6 @@ class Matrix : public vector<vector<int> > {
       }
     }
 
-    assert(left == Matrix::One(n));
-    assert((*this) * right == Matrix::One(n));
     return right;
   }
 
