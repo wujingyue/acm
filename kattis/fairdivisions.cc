@@ -135,8 +135,23 @@ int main() {
   }
 #else
   int n = 2000;
+  points.reserve(n);
   for (int i = 0; i < n; i++) {
-    points.push_back(make_pair(rand() % 10000, rand() % 10000));
+    while (true) {
+      int x = rand() % 10000;
+      int y = rand() % 10000;
+      bool exists = false;
+      for (const auto& p : points) {
+        if (p == make_pair(x, y)) {
+          exists = true;
+          break;
+        }
+      }
+      if (!exists) {
+        points.push_back(make_pair(x, y));
+        break;
+      }
+    }
   }
 #endif
 
