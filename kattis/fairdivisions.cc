@@ -1,8 +1,10 @@
 #include <algorithm>
 #include <cassert>
 #include <cfloat>
+#include <climits>
 #include <cmath>
 #include <iostream>
+#include <set>
 #include <vector>
 
 using namespace std;
@@ -23,10 +25,9 @@ class Solution {
            return p1.first < p2.first;
          });
 
-    vector<double> angles;
-    angles.reserve(n);
+    set<pair<double, int>> angles;
     for (int i = 0; i + 1 < n; i++) {
-      angles.push_back(GetAngle(points[i], points[i + 1]));
+      angles.insert(make_pair(GetAngle(points[i], points[i + 1]), i));
     }
 
     double last_min_angle = -DBL_MAX;
@@ -40,33 +41,42 @@ class Solution {
       cerr << endl;
 #endif
 
-      double min_angle = DBL_MAX;
-      for (int i = 0; i + 1 < n; i++) {
-        if (angles[i] > last_min_angle && angles[i] < min_angle) {
-          min_angle = angles[i];
-        }
-      }
-      if (min_angle == DBL_MAX) {
+      auto arg_min = angles.lower_bound(make_pair(last_min_angle, INT_MAX));
+      if (arg_min == angles.end()) {
         break;
       }
 
-      for (int i = 0; i + 1 < n;) {
-        if (angles[i] != min_angle) {
-          i++;
-          continue;
-        }
+      double min_angle = arg_min->first;
+      vector<int> indices_to_flip;
+      do {
+        indices_to_flip.push_back(arg_min->second);
+        arg_min = angles.erase(arg_min);
+      } while (arg_min != angles.end() && arg_min->first == min_angle);
 
+      int i = 0;
+      while (i < (int)indices_to_flip.size()) {
         int j = i + 1;
-        while (j + 1 < n && angles[j] == min_angle) {
+        while (j < (int)indices_to_flip.size() && indices_to_flip[j - 1] + 1 == indices_to_flip[j]) {
           j++;
         }
 
-        SwapRange(points, i, j);
-        for (int k = max(i - 1, 0); k <= min(j, n - 2); k++) {
-          angles[k] = GetAngle(points[k], points[k + 1]);
+        int s = indices_to_flip[i];
+        int e = indices_to_flip[j - 1] + 1;
+        if (s - 1 >= 0) {
+          int removed = angles.erase(make_pair(GetAngle(points[s - 1], points[s]), s - 1));
+          assert(removed == 1);
+        }
+        if (e + 1 < n) {
+          int removed = angles.erase(make_pair(GetAngle(points[e], points[e + 1]), e));
+          assert(removed == 1);
         }
 
-        if (i < n / 2 && j >= n / 2) {
+        SwapRange(points, s, e);
+        for (int k = max(s - 1, 0); k <= min(e, n - 2); k++) {
+          angles.insert(make_pair(GetAngle(points[k], points[k + 1]), k));
+        }
+
+        if (s < n / 2 && e >= n / 2) {
           count++;
         }
 
