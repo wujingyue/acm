@@ -56,18 +56,21 @@ class Solution {
       int i = 0;
       while (i < (int)indices_to_flip.size()) {
         int j = i + 1;
-        while (j < (int)indices_to_flip.size() && indices_to_flip[j - 1] + 1 == indices_to_flip[j]) {
+        while (j < (int)indices_to_flip.size() &&
+               indices_to_flip[j - 1] + 1 == indices_to_flip[j]) {
           j++;
         }
 
         int s = indices_to_flip[i];
         int e = indices_to_flip[j - 1] + 1;
         if (s - 1 >= 0) {
-          int removed = angles.erase(make_pair(GetAngle(points[s - 1], points[s]), s - 1));
+          int removed = angles.erase(
+              make_pair(GetAngle(points[s - 1], points[s]), s - 1));
           assert(removed == 1);
         }
         if (e + 1 < n) {
-          int removed = angles.erase(make_pair(GetAngle(points[e], points[e + 1]), e));
+          int removed =
+              angles.erase(make_pair(GetAngle(points[e], points[e + 1]), e));
           assert(removed == 1);
         }
 
@@ -120,15 +123,22 @@ class Solution {
 };
 
 int main() {
+  vector<pair<int, int>> points;
+#if 1
   int n;
   cin >> n;
-  vector<pair<int, int>> points;
   points.reserve(n);
   for (int i = 0; i < n; i++) {
     int x, y;
     cin >> x >> y;
     points.push_back(make_pair(x, y));
   }
+#else
+  int n = 2000;
+  for (int i = 0; i < n; i++) {
+    points.push_back(make_pair(rand() % 10000, rand() % 10000));
+  }
+#endif
 
   Solution s;
   cout << s.CountFairDivisions(points) << endl;
