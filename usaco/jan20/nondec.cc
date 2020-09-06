@@ -7,6 +7,7 @@
 
 using namespace std;
 
+// Abstract an modulo integer to a class.
 constexpr int kModulo = 1000000007;
 constexpr int kHalf = (kModulo + 1) / 2;
 constexpr int kMinusHalf = kModulo - kHalf;
