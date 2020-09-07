@@ -96,9 +96,6 @@ class Solution {
     int x = p2.first - p1.first;
     int y = p2.second - p1.second;
     assert(x != 0 || y != 0);
-    int g = GCD(abs(x), abs(y));
-    x /= g;
-    y /= g;
     double angle = atan2(y, x);
     if (angle < 0) {
       angle += M_PI * 2;
@@ -112,13 +109,6 @@ class Solution {
       i++;
       j--;
     }
-  }
-
-  static int GCD(int a, int b) {
-    if (b == 0) {
-      return a;
-    }
-    return GCD(b, a % b);
   }
 };
 
